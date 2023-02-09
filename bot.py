@@ -3,25 +3,43 @@ import telebot
 from dotenv import load_dotenv
 from utils.ai import predict
 from googletrans import Translator
+from telebot import types
+from dataclasses import dataclass
+from telebot.types import CallbackQuery
+
 
 load_dotenv()
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 
 bot = telebot.TeleBot(BOT_TOKEN)
 translator = Translator()
+settings_by_chat_id = {}
+
+
+@dataclass()
+class ChatSettings:
+    delete_flag: bool = True
+    toxic_rate: float = 0.7
 
 
 @bot.message_handler(commands=['start', 'hello'])
 def send_welcome(message):
-    bot.reply_to(message, "Bot started")
+    settings = ChatSettings()
+    settings_by_chat_id[message.chat.id] = settings_by_chat_id.get(message.chat.id, settings)
 
 
 @bot.message_handler(func=lambda msg: True)
 def echo_all(message):
+    chat_id = message.chat.id
+    chat_settings = settings_by_chat_id[chat_id]
     text = translator.translate(message.text).text
     prob = predict(text)[0][1]
-    if prob > 0.7:
-        bot.reply_to(message, 'toxicity detected: ' + str(prob))
+    if prob > chat_settings.toxic_rate:
+        if chat_settings.delete_flag:
+            bot.delete_message(chat_id, message.message_id)
+            bot.send_message(chat_id, 'Your message has been detected as toxic. (' + str(prob) + ')')
+        else:
+            bot.reply_to(message, 'Your message has been detected as toxic. (' + str(prob) + ')')
     else:
         bot.reply_to(message, prob)
 
