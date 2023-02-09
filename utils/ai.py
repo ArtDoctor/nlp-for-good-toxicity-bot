@@ -4,10 +4,14 @@ from nltk.stem import WordNetLemmatizer
 import tensorflow as tf
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
+import nltk
+import os
 
 # assert tf.__version__.startswith('2')
 # tf.get_logger().setLevel('ERROR')
-
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('wordnet')
 
 def remove_symbols(tokens: list):
     return [w for w in tokens if w.isalpha()]
@@ -53,8 +57,9 @@ def process_text(raw_text):
 
 
 # Convert the model
-converter = tf.lite.TFLiteConverter.from_saved_model(
-    r'C:\Users\ArtDo\OneDrive\Рабочий стол\nlp-for-good-2-bot\utils\is_toxic_model\saved_model')
+dirname = os.path.dirname(__file__)
+filename = os.path.join(dirname, 'is_toxic_model/saved_model')
+converter = tf.lite.TFLiteConverter.from_saved_model(filename)
 tflite_model = converter.convert()
 
 interpreter = tf.lite.Interpreter(model_content=tflite_model)
