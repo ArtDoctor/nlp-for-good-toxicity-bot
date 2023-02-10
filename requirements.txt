@@ -6,3 +6,5 @@ python-dotenv~=0.21.1
 tensorflow~=2.9.3
 nltk~=3.8.1
 gspread~=5.7.2
+SpeechRecognition==3.9.0
+pydub==0.25.1
