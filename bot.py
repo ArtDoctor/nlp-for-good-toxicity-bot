@@ -3,10 +3,10 @@ import telebot
 from dotenv import load_dotenv
 from utils.ai import predict
 from googletrans import Translator
-from utils.button_handler import handle_button_callbacks
 from telebot import types
 from dataclasses import dataclass
 from telebot.types import CallbackQuery
+from utils.googlesheets_handler import append_new_cell
 
 
 load_dotenv()
@@ -21,6 +21,7 @@ settings_by_chat_id = {}
 class ChatSettings:
     delete_flag: bool = True
     toxic_rate: float = 0.7
+    validate_flag: bool = True
 
 
 def gen_markup():
@@ -35,9 +36,22 @@ def gen_markup():
 def callback_query(call: CallbackQuery):
     chat_id = call.message.chat.id
     chat_settings = settings_by_chat_id[chat_id]
-    if call.data == "cb_yes":
+    if call.data == 'toxic':
+        bot.delete_message(call.message.chat.id, call.message.id)
+        bot.delete_message(call.message.chat.id, call.message.reply_to_message.id)
+        bot.send_message(call.message.chat.id, '*Ви позначити повідомлення *' + call.message.reply_to_message.text +
+                         '* як токсичне.*', parse_mode="Markdown")
+        append_new_cell(True, call.message.reply_to_message.text)
+    elif call.data == 'non_toxic':
+        bot.delete_message(call.message.chat.id, call.message.id)
+        bot.delete_message(call.message.chat.id, call.message.reply_to_message.id)
+        bot.send_message(call.message.chat.id, '*Ви позначити повідомлення *' + call.message.reply_to_message.text +
+                         '* як не токсичне.*', parse_mode="Markdown")
+        append_new_cell(False, call.message.reply_to_message.text)
+    elif call.data == "cb_yes":
         bot.answer_callback_query(call.id, "Answer is Yes")
         chat_settings.delete_flag = True
+        bot.send_message(chat_id, "Settings updated", reply_markup=gen_base_menu())
     elif call.data == "cb_no":
         bot.answer_callback_query(call.id, "Answer is No")
         chat_settings.delete_flag = False
@@ -48,6 +62,7 @@ def send_welcome(message):
     settings = ChatSettings()
     settings_by_chat_id[message.chat.id] = settings_by_chat_id.get(message.chat.id, settings)
     bot.reply_to(message, "Bot started", reply_markup=gen_base_menu())
+
 
 def gen_base_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -70,35 +85,27 @@ def echo_all(message):
     else:
         text = translator.translate(message.text).text
         prob = predict(text)[0][1]
+        response = ''
         if prob > chat_settings.toxic_rate:
             if chat_settings.delete_flag:
                 bot.delete_message(chat_id, message.message_id)
                 bot.send_message(chat_id, 'Your message has been detected as toxic. (' + str(prob) + ')')
             else:
-                bot.reply_to(message, 'Your message has been detected as toxic. (' + str(prob) + ')')
+                response = 'Your message has been detected as toxic. (' + str(prob) + ')'
         else:
-            bot.reply_to(message, prob)
-    # AI and probability
-    text = translator.translate(message.text).text
-    prob = predict(text)[0][1]
-    if prob > 0.7:
-        response = 'toxicity detected: ' + str(prob)
-    else:
-        response = str(prob)
-
-    # Buttons for validation
-    markup = types.InlineKeyboardMarkup()
-    button = types.InlineKeyboardButton('😡 Токсично', callback_data='toxic')
-    button2 = types.InlineKeyboardButton('👌 Не токсично', callback_data='non_toxic')
-    markup.add(button, button2)
-
-    # Send message with buttons
-    bot.reply_to(message, response, reply_markup=markup)
+            response = str(prob)
+        if chat_settings.validate_flag and len(response)>0:
+            val_markup = validation_markup()
+            bot.reply_to(message, response, reply_markup=val_markup)
+        elif len(response)>0:
+            bot.reply_to(message, response)
 
 
-@bot.callback_query_handler(func=lambda call: True)
-def callback_inline(call):
-    handle_button_callbacks(call, bot)
-
+def validation_markup():
+    val_markup = types.InlineKeyboardMarkup()
+    button = types.InlineKeyboardButton('😡 Toxic', callback_data='toxic')
+    button2 = types.InlineKeyboardButton('👌 Not toxic', callback_data='non_toxic')
+    val_markup.add(button, button2)
+    return val_markup
 
 bot.infinity_polling()
