@@ -5,6 +5,7 @@ from utils.ai import predict
 from googletrans import Translator
 
 load_dotenv()
+os.environ['BOT_TOKEN'] = "6006159686:AAFQiVoYW9DQa5I8NvgzpYJBnx9mC8PFV48"
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 
 bot = telebot.TeleBot(BOT_TOKEN)

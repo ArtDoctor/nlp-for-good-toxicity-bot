@@ -6,8 +6,8 @@ for t in text:
     tokens[texts[0]] = int(texts[1][:])
 
 
-def tokenize(text, maxlen=20):
-    res = [0] * 20
+def tokenize(text, maxlen=22):
+    res = [0] * 22
     res[0] = 1
     splitted = text.split()
     for i in range(0, maxlen - 1):

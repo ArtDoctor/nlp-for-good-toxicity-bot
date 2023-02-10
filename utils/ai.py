@@ -1,9 +1,15 @@
+import nltk
+
 from utils.tokenizer import tokenize
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 import tensorflow as tf
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('wordnet')
 
 # assert tf.__version__.startswith('2')
 # tf.get_logger().setLevel('ERROR')
@@ -54,7 +60,7 @@ def process_text(raw_text):
 
 # Convert the model
 converter = tf.lite.TFLiteConverter.from_saved_model(
-    r'C:\Users\ArtDo\OneDrive\Рабочий стол\nlp-for-good-2-bot\utils\is_toxic_model\saved_model')
+    r"C:\Users\yarem\GitHubProjects\nlp-for-good-toxicity-bot\utils\is_toxic_model\saved_model")
 tflite_model = converter.convert()
 
 interpreter = tf.lite.Interpreter(model_content=tflite_model)
@@ -67,7 +73,7 @@ input = interpreter.get_input_details()[0]  # Model has single input.
 def predict(raw_test_message):
     processed_test_message = process_text(raw_test_message)
     vect_data = tokenize(processed_test_message)
-    input_data = tf.constant(vect_data, shape=[1, 20])
+    input_data = tf.constant(vect_data, shape=[1, 22])
     interpreter.set_tensor(input['index'], input_data)
     interpreter.invoke()
     res = interpreter.get_tensor(output['index'])
