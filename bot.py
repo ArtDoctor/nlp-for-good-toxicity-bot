@@ -40,7 +40,7 @@ def callback_query(call: CallbackQuery):
     elif call.data == 'non_toxic':
         bot.delete_message(chat_id, call.message.id)
         bot.delete_message(chat_id, call.message.reply_to_message.id)
-        bot.send_message(chat_id, '*YYou have marked the message *' + call.message.reply_to_message.text +
+        bot.send_message(chat_id, '*You have marked the message *' + call.message.reply_to_message.text +
                          '* as not toxic.*', parse_mode="Markdown")
         append_new_cell(False, call.message.reply_to_message.text)
     elif call.data == "del_yes":
