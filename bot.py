@@ -40,28 +40,32 @@ def callback_query(call: CallbackQuery):
     elif call.data == "cb_no":
         bot.answer_callback_query(call.id, "Answer is No")
         chat_settings.delete_flag = False
-
+    bot.send_message(chat_id, "Settings updated", reply_markup=gen_base_menu())
 
 @bot.message_handler(commands=['start', 'hello'])
 def send_welcome(message):
     settings = ChatSettings()
     settings_by_chat_id[message.chat.id] = settings_by_chat_id.get(message.chat.id, settings)
+    bot.reply_to(message, "Bot started", reply_markup=gen_base_menu())
+
+def gen_base_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton("Settings")
     markup.add(btn1)
-    bot.reply_to(message, "Bot started", reply_markup=markup)
+    return markup
+
 
 @bot.message_handler(func=lambda msg: True)
 def echo_all(message):
     chat_id = message.chat.id
     chat_settings = settings_by_chat_id[chat_id]
     if message.text == 'Settings':
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
         btn1 = types.KeyboardButton('Delete toxic messages?')
         markup.add(btn1)
         bot.send_message(message.from_user.id, 'Choose button', reply_markup=markup)
     elif message.text == 'Delete toxic messages?':
-        bot.send_message(message.chat.id, "Delete toxic messages?", reply_markup=gen_markup())
+        bot.send_message(message.chat.id, "Choose answer", reply_markup=gen_markup())
     else:
         text = translator.translate(message.text).text
         prob = predict(text)[0][1]
