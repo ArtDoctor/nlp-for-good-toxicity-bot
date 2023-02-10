@@ -5,3 +5,4 @@ numpy~=1.21.6
 python-dotenv~=0.21.1
 tensorflow~=2.9.3
 nltk~=3.8.1
+gspread~=5.7.2
