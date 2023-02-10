@@ -7,7 +7,7 @@ from telebot import types
 from dataclasses import dataclass
 from telebot.types import CallbackQuery
 from utils.googlesheets_handler import append_new_cell
-from utils.markup import gen_del_markup, gen_base_menu, validation_markup
+from utils.markup import gen_yes_no_markup, gen_base_menu, validation_markup
 
 load_dotenv()
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
@@ -29,24 +29,32 @@ def callback_query(call: CallbackQuery):
     chat_id = call.message.chat.id
     chat_settings = settings_by_chat_id[chat_id]
     if call.data == 'toxic':
-        bot.delete_message(call.message.chat.id, call.message.id)
-        bot.delete_message(call.message.chat.id, call.message.reply_to_message.id)
-        bot.send_message(call.message.chat.id, '*Ви позначити повідомлення *' + call.message.reply_to_message.text +
-                         '* як токсичне.*', parse_mode="Markdown")
+        bot.delete_message(chat_id, call.message.id)
+        bot.delete_message(chat_id, call.message.reply_to_message.id)
+        bot.send_message(chat_id, '*You have marked the message *' + call.message.reply_to_message.text +
+                         '* as toxic.*', parse_mode="Markdown")
         append_new_cell(True, call.message.reply_to_message.text)
     elif call.data == 'non_toxic':
-        bot.delete_message(call.message.chat.id, call.message.id)
-        bot.delete_message(call.message.chat.id, call.message.reply_to_message.id)
-        bot.send_message(call.message.chat.id, '*Ви позначити повідомлення *' + call.message.reply_to_message.text +
-                         '* як не токсичне.*', parse_mode="Markdown")
+        bot.delete_message(chat_id, call.message.id)
+        bot.delete_message(chat_id, call.message.reply_to_message.id)
+        bot.send_message(chat_id, '*YYou have marked the message *' + call.message.reply_to_message.text +
+                         '* as not toxic.*', parse_mode="Markdown")
         append_new_cell(False, call.message.reply_to_message.text)
-    elif call.data == "cb_yes":
-        bot.answer_callback_query(call.id, "Answer is Yes")
+    elif call.data == "del_yes":
+        bot.answer_callback_query(call.id, show_alert=False)
         chat_settings.delete_flag = True
         bot.send_message(chat_id, "Settings updated", reply_markup=gen_base_menu())
-    elif call.data == "cb_no":
-        bot.answer_callback_query(call.id, "Answer is No")
+    elif call.data == "del_no":
+        bot.answer_callback_query(call.id, show_alert=False)
         chat_settings.delete_flag = False
+        bot.send_message(chat_id, "Settings updated", reply_markup=gen_base_menu())
+    elif call.data == "val_yes":
+        bot.answer_callback_query(call.id, show_alert=False)
+        chat_settings.validate_flag = True
+        bot.send_message(chat_id, "Settings updated", reply_markup=gen_base_menu())
+    elif call.data == "val_no":
+        bot.answer_callback_query(call.id, show_alert=False)
+        chat_settings.validate_flag = False
         bot.send_message(chat_id, "Settings updated", reply_markup=gen_base_menu())
 
 
@@ -71,10 +79,13 @@ def echo_all(message):
     if message.text == 'Settings':
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
         btn1 = types.KeyboardButton('Delete toxic messages?')
-        markup.add(btn1)
+        btn2 = types.KeyboardButton('Validate messages?')
+        markup.add(btn1).add(btn2)
         bot.send_message(message.from_user.id, 'Choose button', reply_markup=markup)
     elif message.text == 'Delete toxic messages?':
-        bot.send_message(message.chat.id, "Choose answer", reply_markup=gen_del_markup())
+        bot.send_message(message.chat.id, "Choose answer", reply_markup=gen_yes_no_markup('del_yes', 'del_no'))
+    elif message.text == 'Validate messages?':
+        bot.send_message(message.chat.id, "Choose answer", reply_markup=gen_yes_no_markup('val_yes', 'val_no'))
     else:
         text = translator.translate(message.text).text
         prob = predict(text)[0][1]

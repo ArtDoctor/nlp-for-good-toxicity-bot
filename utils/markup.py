@@ -1,11 +1,11 @@
 from telebot import types
 
 
-def gen_del_markup():
+def gen_yes_no_markup(yes_text, no_text):
     markup = types.InlineKeyboardMarkup()
     markup.row_width = 2
-    markup.add(types.InlineKeyboardButton("Yes", callback_data="cb_yes"),
-                               types.InlineKeyboardButton("No", callback_data="cb_no"))
+    markup.add(types.InlineKeyboardButton("Yes", callback_data=yes_text),
+                               types.InlineKeyboardButton("No", callback_data=no_text))
     return markup
 
 
