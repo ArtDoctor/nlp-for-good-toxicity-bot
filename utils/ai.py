@@ -7,11 +7,13 @@ from nltk.stem import PorterStemmer
 import nltk
 import os
 
-# assert tf.__version__.startswith('2')
-# tf.get_logger().setLevel('ERROR')
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('wordnet')
+
+# assert tf.__version__.startswith('2')
+# tf.get_logger().setLevel('ERROR')
+
 
 def remove_symbols(tokens: list):
     return [w for w in tokens if w.isalpha()]
@@ -72,7 +74,7 @@ input = interpreter.get_input_details()[0]  # Model has single input.
 def predict(raw_test_message):
     processed_test_message = process_text(raw_test_message)
     vect_data = tokenize(processed_test_message)
-    input_data = tf.constant(vect_data, shape=[1, 20])
+    input_data = tf.constant(vect_data, shape=[1, 22])
     interpreter.set_tensor(input['index'], input_data)
     interpreter.invoke()
     res = interpreter.get_tensor(output['index'])
