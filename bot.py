@@ -34,13 +34,13 @@ def callback_query(call: CallbackQuery):
     if call.data == 'toxic':
         bot.delete_message(chat_id, call.message.id)
         bot.delete_message(chat_id, call.message.reply_to_message.id)
-        bot.send_message(chat_id, '*You have marked the message *' + #call.message.reply_to_message.text +
+        bot.send_message(chat_id, '*You have marked the message *' + call.message.reply_to_message.text +
                          '* as toxic.*', parse_mode="Markdown")
         append_new_cell(True, call.message.reply_to_message.text)
     elif call.data == 'non_toxic':
         bot.delete_message(chat_id, call.message.id)
         bot.delete_message(chat_id, call.message.reply_to_message.id)
-        bot.send_message(chat_id, '*YYou have marked the message *' + #call.message.reply_to_message.text +
+        bot.send_message(chat_id, '*YYou have marked the message *' + call.message.reply_to_message.text +
                          '* as not toxic.*', parse_mode="Markdown")
         append_new_cell(False, call.message.reply_to_message.text)
     elif call.data == "del_yes":
@@ -98,7 +98,7 @@ def process_custom_text(message, audio_text=None):
             response = 'Your message has been detected as toxic. (' + str(prob) + ')'
     else:
         response = str(prob)
-    if chat_settings.validate_flag and len(response) > 0:
+    if chat_settings.validate_flag and len(response) > 0 and not audio_text:
         val_markup = validation_markup()
         bot.reply_to(message, response, reply_markup=val_markup)
     elif len(response) > 0:
