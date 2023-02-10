@@ -65,13 +65,6 @@ def send_welcome(message):
     bot.reply_to(message, "Bot started", reply_markup=gen_base_menu())
 
 
-def gen_base_menu():
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = types.KeyboardButton("Settings")
-    markup.add(btn1)
-    return markup
-
-
 @bot.message_handler(func=lambda msg: True)
 def echo_all(message):
     chat_id = message.chat.id
