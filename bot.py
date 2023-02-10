@@ -41,21 +41,17 @@ def callback_query(call: CallbackQuery):
                          '* as not toxic.*', parse_mode="Markdown")
         append_new_cell(False, call.message.reply_to_message.text)
     elif call.data == "del_yes":
-        bot.answer_callback_query(call.id, show_alert=False)
         chat_settings.delete_flag = True
-        bot.send_message(chat_id, "Settings updated", reply_markup=gen_base_menu())
+        bot.send_message(chat_id, "Toxic messages will be deleted", reply_markup=gen_base_menu())
     elif call.data == "del_no":
-        bot.answer_callback_query(call.id, show_alert=False)
         chat_settings.delete_flag = False
-        bot.send_message(chat_id, "Settings updated", reply_markup=gen_base_menu())
+        bot.send_message(chat_id, "Toxic messages will not be deleted", reply_markup=gen_base_menu())
     elif call.data == "val_yes":
-        bot.answer_callback_query(call.id, show_alert=False)
         chat_settings.validate_flag = True
-        bot.send_message(chat_id, "Settings updated", reply_markup=gen_base_menu())
+        bot.send_message(chat_id, "Validation option will be active", reply_markup=gen_base_menu())
     elif call.data == "val_no":
-        bot.answer_callback_query(call.id, show_alert=False)
         chat_settings.validate_flag = False
-        bot.send_message(chat_id, "Settings updated", reply_markup=gen_base_menu())
+        bot.send_message(chat_id, "Validation option will be inactive", reply_markup=gen_base_menu())
 
 
 @bot.message_handler(commands=['start', 'hello'])
@@ -76,9 +72,11 @@ def echo_all(message):
         markup.add(btn1).add(btn2)
         bot.send_message(message.from_user.id, 'Choose button', reply_markup=markup)
     elif message.text == 'Delete toxic messages?':
-        bot.send_message(message.chat.id, "Choose answer", reply_markup=gen_yes_no_markup('del_yes', 'del_no'))
+        bot.delete_message(chat_id, message.message_id)
+        bot.send_message(chat_id, "Delete toxic messages?", reply_markup=gen_yes_no_markup('del_yes', 'del_no'))
     elif message.text == 'Validate messages?':
-        bot.send_message(message.chat.id, "Choose answer", reply_markup=gen_yes_no_markup('val_yes', 'val_no'))
+        bot.delete_message(chat_id, message.message_id)
+        bot.send_message(chat_id, "Validate messages?", reply_markup=gen_yes_no_markup('val_yes', 'val_no'))
     else:
         text = translator.translate(message.text).text
         prob = predict(text)[0][1]
