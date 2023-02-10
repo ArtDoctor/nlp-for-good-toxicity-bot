@@ -7,7 +7,7 @@ from telebot import types
 from dataclasses import dataclass
 from telebot.types import CallbackQuery
 from utils.googlesheets_handler import append_new_cell
-
+from utils.markup import gen_del_markup, gen_base_menu, validation_markup
 
 load_dotenv()
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
@@ -22,14 +22,6 @@ class ChatSettings:
     delete_flag: bool = True
     toxic_rate: float = 0.7
     validate_flag: bool = True
-
-
-def gen_markup():
-    markup = types.InlineKeyboardMarkup()
-    markup.row_width = 2
-    markup.add(types.InlineKeyboardButton("Yes", callback_data="cb_yes"),
-                               types.InlineKeyboardButton("No", callback_data="cb_no"))
-    return markup
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -55,7 +47,8 @@ def callback_query(call: CallbackQuery):
     elif call.data == "cb_no":
         bot.answer_callback_query(call.id, "Answer is No")
         chat_settings.delete_flag = False
-    bot.send_message(chat_id, "Settings updated", reply_markup=gen_base_menu())
+        bot.send_message(chat_id, "Settings updated", reply_markup=gen_base_menu())
+
 
 @bot.message_handler(commands=['start', 'hello'])
 def send_welcome(message):
@@ -81,7 +74,7 @@ def echo_all(message):
         markup.add(btn1)
         bot.send_message(message.from_user.id, 'Choose button', reply_markup=markup)
     elif message.text == 'Delete toxic messages?':
-        bot.send_message(message.chat.id, "Choose answer", reply_markup=gen_markup())
+        bot.send_message(message.chat.id, "Choose answer", reply_markup=gen_del_markup())
     else:
         text = translator.translate(message.text).text
         prob = predict(text)[0][1]
@@ -100,12 +93,5 @@ def echo_all(message):
         elif len(response)>0:
             bot.reply_to(message, response)
 
-
-def validation_markup():
-    val_markup = types.InlineKeyboardMarkup()
-    button = types.InlineKeyboardButton('😡 Toxic', callback_data='toxic')
-    button2 = types.InlineKeyboardButton('👌 Not toxic', callback_data='non_toxic')
-    val_markup.add(button, button2)
-    return val_markup
 
 bot.infinity_polling()
